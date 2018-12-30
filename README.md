@@ -6,7 +6,7 @@ NZBget iso extract, simple / basic nzbget post process script to extract iso fil
 * Debug messages (default: do not create debug messages)
 * Option to disable (default: script is enabled)
 
-ToDo:
+To do:
 * Option to check a list of categories against current download category: e.g. 'Video' / 'Movies' / etc will be extracted, but 'Games' and 'Programs' not 
 
 Uses 7zip instead op python, no need to import thirdparty libraries.
