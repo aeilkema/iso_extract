@@ -25,7 +25,7 @@
 #
 # Author: J. Aeilkema (aeilkema@gmail.com).
 # License: GPLv3 (http://www.gnu.org/licenses/gpl.html).
-# PP-Script Version: 1.0.
+# PP-Script Version: 1.1.
 #
 # NOTE: This script requires Python 2.x to be installed on your system.
 #
@@ -41,6 +41,16 @@
 #
 # Set full path or leave empty to use unpack setting (settings -> unpack -> SevenZipCmd).
 #7ZipFullPath=
+# Only extract if category is in this list.
+#
+# This option is to prevent extraction for some categories. e.g. 'Games'. Only add categories which you _WANT TO EXTRACT_.
+#
+#OnlyForCategories=
+# Extract iso's without category (yes, no).
+#
+# What to do if a iso has no category?.
+#
+#ExtractWithoutCat=no
 # Always extract to subdirectory (yes, no).
 #
 # Always extract the ISO file(s) to a subdirectory, even if not in base download folder (see note).
@@ -63,6 +73,12 @@
 ### NZBGET POST-PROCESSING SCRIPT                                           ###
 ##############################################################################
 
+# ****** Changelog ******
+# Version 1.0: initial release
+# Version 1.1: Function: Added category check
+#              Options:  ExtractWithoutCat, extract is current category is empty
+#                        OnlyForCategories, list of categories to extract
+
 import os
 import sys
 
@@ -76,7 +92,32 @@ download_dir=os.environ['NZBPP_DIRECTORY']
 path_7zip=os.environ['NZBOP_SEVENZIPCMD']
 fullpath7zip=os.environ.get('NZBPO_7ZipFullPath')
 DestDir=os.environ['NZBOP_DESTDIR']
+script_enabled=os.environ.get('NZBPO_Enabled', 'yes') == 'yes'
+debug_enabled=os.environ.get('NZBPO_Debug', 'yes') == 'yes'
+extracttosubdir=os.environ.get('NZBPO_SubDirectory', 'yes') == 'yes'
+deleteafterextract=os.environ.get('NZBPO_DeleteAfterExtract', 'yes') == 'yes'
 SubDirCommand=' -r'
+TempOnlyForCategories=os.environ['NZBPO_OnlyForCategories'].replace(' ,',',')
+TempOnlyForCategories=TempOnlyForCategories.replace(', ',',')
+OnlyForCategories=TempOnlyForCategories.lower().split(',')
+CurrentCategory=os.environ['NZBPP_CATEGORY'].lower()
+CatInList=CurrentCategory.lower() in OnlyForCategories
+ExtractWithoutCat=os.environ.get('NZBPO_ExtractWithoutCat', 'yes') == 'yes'
+
+if debug_enabled:
+    print('[INFO] Categories to extract = %s ' % OnlyForCategories)
+    print('[INFO] Current category = %s ' % CurrentCategory)
+    print('[INFO] Current category is in list to extract = %s ' % CatInList)
+    print('[INFO] Extract if there is no category = %s ' % ExtractWithoutCat)
+
+if CurrentCategory:
+    if not CatInList:
+        print('[INFO] ISO file is not a category which is in the list of categories to extract, exitting...')
+        sys.exit(POSTPROCESS_NONE)
+else:
+    if not ExtractWithoutCat:
+        print('[INFO] ISO file has no category and option ExtractWithoutCat is not yes, exitting...')
+        sys.exit(POSTPROCESS_NONE)
 
 # Check if directory still exist (for post-process again)
 if not os.path.exists(os.environ['NZBPP_DIRECTORY']):
@@ -87,12 +128,6 @@ if not os.path.exists(os.environ['NZBPP_DIRECTORY']):
 if os.environ['NZBPP_PARSTATUS'] == '1' or os.environ['NZBPP_PARSTATUS'] == '4' or os.environ['NZBPP_UNPACKSTATUS'] == '1':
     print('[ERROR] Download of "%s" has failed, exiting' % (os.environ['NZBPP_NZBNAME']))
     sys.exit(POSTPROCESS_NONE)
-
-# Init script config options
-script_enabled=os.environ.get('NZBPO_Enabled', 'yes') == 'yes'
-debug_enabled=os.environ.get('NZBPO_Debug', 'yes') == 'yes'
-extracttosubdir=os.environ.get('NZBPO_SubDirectory', 'yes') == 'yes'
-deleteafterextract=os.environ.get('NZBPO_DeleteAfterExtract', 'yes') == 'yes'
 
 if debug_enabled:
     print('[INFO] Download directory for file = %s ' % download_dir)
@@ -144,7 +179,7 @@ if result.wait() != 0:
     print('[ERROR] 7Zip extraction: failed')
     sys.exit(POSTPROCESS_ERROR)
 else:
-    print('[INFO] 7Zip extraction: success')
+    print('[DETAIL] 7Zip extraction: success')
     if deleteafterextract:
         import glob
         print('[INFO] Deleting ISO file(s)')
