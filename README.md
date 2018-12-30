@@ -1,13 +1,14 @@
 # iso_extract
 NZBget iso extract, simple / basic nzbget post process script to extract iso files after download via 7Zip
 
+[Version 1.0]
 * Option to delete it after successful extraction (default: no deletion)
 * Option to extract to subdirectory (default: extract to subdirectory)
 * Debug messages (default: do not create debug messages)
 * Option to disable (default: script is enabled)
 
-To do:
-* Option to check a list of categories against current download category and not to extract in that case: e.g. 'Video' / 'Movies' / etc will be extracted, but 'Games' and 'Programs' not 
+[Version 1.1]
+* Added: Option to check a list of categories against current download category and not to extract in that case: e.g. 'Video' / 'Movies' / etc will be extracted, but 'Games' and 'Programs' not 
 
 Uses 7zip instead op python, no need to import thirdparty libraries.
 Did try patools library, but found 7zip worked easier. 
